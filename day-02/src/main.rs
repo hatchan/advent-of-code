@@ -22,53 +22,57 @@ fn main() {
 }
 
 fn parse_line(input: Result<String, Error>) -> u64 {
-    let mut r = 0;
-    let (expected, action) = input
+    let (expected, result) = input
         .expect("invalid line")
         .split_once(" ")
-        .map(|(expected, action)| (parse_choice(expected), parse_choice(action)))
+        .map(|(expected, action)| (parse_choice(expected), parse_game_result(action)))
         .expect("invalid format");
 
-    r += match action {
-        Choices::Rock => 1,
-        Choices::Paper => 2,
-        Choices::Scissors => 3,
+    let action = match result {
+        GameResult::Win => match expected {
+            Choices::Rock => Choices::Paper,
+            Choices::Paper => Choices::Scissors,
+            Choices::Scissors => Choices::Rock,
+        },
+        GameResult::Draw => expected,
+        GameResult::Lose => match expected {
+            Choices::Rock => Choices::Scissors,
+            Choices::Paper => Choices::Rock,
+            Choices::Scissors => Choices::Paper,
+        },
     };
 
-    r += if expected == action {
-        3
-    } else {
-        match (expected, action) {
-            (Choices::Rock, Choices::Paper) => 6,
-            (Choices::Paper, Choices::Scissors) => 6,
-            (Choices::Scissors, Choices::Rock) => 6,
-            _ => 0,
-        }
-    };
-
-    r
+    action as u64 + result as u64
 }
 
 fn parse_choice(input: &str) -> Choices {
     match input {
-        "A" | "X" => Choices::Rock,
-        "B" | "Y" => Choices::Paper,
-        "C" | "Z" => Choices::Scissors,
+        "A" => Choices::Rock,
+        "B" => Choices::Paper,
+        "C" => Choices::Scissors,
+        _ => panic!("invalid input: {}", input),
+    }
+}
+
+fn parse_game_result(input: &str) -> GameResult {
+    match input {
+        "X" => GameResult::Lose,
+        "Y" => GameResult::Draw,
+        "Z" => GameResult::Win,
         _ => panic!("invalid input: {}", input),
     }
 }
 
 #[derive(PartialEq)]
 enum Choices {
-    Rock,
-    Paper,
-    Scissors,
+    Rock = 1,
+    Paper = 2,
+    Scissors = 3,
 }
 
-// A rock
-// B paper
-// C scissors
-
-// X rock
-// Y paper
-// Z scissors
+#[derive(PartialEq)]
+enum GameResult {
+    Win = 6,
+    Draw = 3,
+    Lose = 0,
+}
