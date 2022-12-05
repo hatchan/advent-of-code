@@ -12,10 +12,8 @@ fn parse_line_a(line: &str) -> u64 {
     let (left, right) = line.split_at(line.len() / 2);
 
     for left_c in left.chars() {
-        for right_c in right.chars() {
-            if left_c == right_c {
-                return char_to_uint(left_c);
-            }
+        if right.contains(left_c) {
+            return char_to_uint(left_c);
         }
     }
 
