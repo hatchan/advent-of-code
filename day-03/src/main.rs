@@ -1,6 +1,7 @@
 fn main() {
     let input = include_str!("../input.txt");
     println!("Day 03 A: {}", solve_a(input));
+    println!("Day 03 B: {}", solve_b(input));
 }
 
 fn solve_a(input: &str) -> u64 {
@@ -22,7 +23,35 @@ fn parse_line_a(line: &str) -> u64 {
 }
 
 fn solve_b(input: &str) -> u64 {
-    todo!()
+    let mut result = 0;
+    let mut i = 0;
+    let mut buf = vec![];
+
+    for line in input.lines() {
+        buf.push(line.chars().collect::<Vec<_>>());
+
+        if i == 2 {
+            // On the third line, calculate the char that is on every lines
+            let unique_1 = &buf[0];
+            let unique_2 = &buf[1];
+            let unique_3 = &buf[2];
+
+            for c in unique_1 {
+                if unique_2.contains(c) && unique_3.contains(c) {
+                    result += char_to_uint(*c);
+                    break;
+                }
+            }
+
+            buf.clear();
+            i = 0;
+        } else {
+            // Otherwise just increment the counter
+            i += 1;
+        }
+    }
+
+    result
 }
 
 fn char_to_uint(c: char) -> u64 {
