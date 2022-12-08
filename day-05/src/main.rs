@@ -25,7 +25,23 @@ fn solve_a(input: &str) -> String {
 }
 
 fn solve_b(input: &str) -> String {
-    todo!()
+    let (mut state, operations) = parse(input);
+
+    for operation in operations {
+        let mut buf = vec![];
+        for _ in 0..operation.amount {
+            buf.push(state[operation.from - 1].pop().expect("no element found "));
+        }
+        buf.reverse();
+        state[operation.to - 1].append(&mut buf);
+    }
+
+    let mut result = String::new();
+    for stack in state {
+        result.push(stack.last().cloned().unwrap_or(' '))
+    }
+
+    result
 }
 
 fn parse(input: &str) -> (Vec<Vec<char>>, Vec<Operation>) {
@@ -100,8 +116,7 @@ mod tests {
 
     #[test]
     fn solve_b_success() {
-        panic!();
-        // assert_eq!(solve_b(INPUT), 70);
+        assert_eq!(solve_b(INPUT), "MCD");
     }
 
     #[test]
