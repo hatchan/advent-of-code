@@ -17,8 +17,19 @@ fn solve_a(input: &str) -> usize {
         })
         .count()
 }
+
 fn solve_b(input: &str) -> usize {
-    todo!()
+    input
+        .lines()
+        .filter(|line| {
+            let (left, right) = line.split_once(",").expect("no comma");
+
+            let left = Range::parse(left);
+            let right = Range::parse(right);
+
+            left.has_overlap(&right)
+        })
+        .count()
 }
 
 struct Range {
@@ -40,6 +51,10 @@ impl Range {
 
     fn contains(&self, other: &Self) -> bool {
         self.begin <= other.begin && self.end >= other.end
+    }
+
+    fn has_overlap(&self, other: &Self) -> bool {
+        self.begin <= other.end && other.begin <= self.end
     }
 }
 
