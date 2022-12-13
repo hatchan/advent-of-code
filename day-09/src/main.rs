@@ -61,12 +61,10 @@ impl Coord {
     fn follow(&mut self, head: &Self) {
         let x_diff = head.x - self.x;
         let y_diff = head.y - self.y;
-        let x_diff_abs = x_diff.abs();
-        let y_diff_abs = y_diff.abs();
 
-        if x_diff_abs > 1 || y_diff_abs > 1 {
-            self.x += x_diff_abs.min(1) * x_diff.signum();
-            self.y += y_diff_abs.min(1) * y_diff.signum();
+        if x_diff.abs() > 1 || y_diff.abs() > 1 {
+            self.x += x_diff.signum();
+            self.y += y_diff.signum();
         }
     }
 }
