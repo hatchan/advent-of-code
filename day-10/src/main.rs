@@ -1,7 +1,7 @@
 fn main() {
     let input = include_str!("../input.txt");
     println!("Day 10 A: {}", solve_a(input));
-    // println!("Day 10 B: {}", solve_b(input));
+    println!("Day 10 B:\n{}", solve_b(input));
 }
 
 fn solve_a(input: &str) -> isize {
@@ -49,8 +49,56 @@ fn solve_a(input: &str) -> isize {
     result
 }
 
-fn solve_b(_input: &str) -> usize {
-    todo!()
+fn solve_b(input: &str) -> String {
+    let mut instructions = input.lines().map(Instruction::parse);
+
+    let mut crt_row = vec![];
+
+    let mut current_cycle = 1;
+
+    let mut cycle_remaining = 1;
+    let mut current_instruction = None;
+    let mut register = 1;
+
+    loop {
+        println!("{}: {}", current_cycle, register);
+        if cycle_remaining == 0 {
+            if let Some(instruction) = current_instruction.take() {
+                match instruction {
+                    Instruction::Noop => {}
+                    Instruction::Add(value) => {
+                        register += value;
+                    }
+                }
+            }
+        }
+
+        if current_instruction.is_none() {
+            match instructions.next() {
+                Some(instruction) => {
+                    cycle_remaining = instruction.cycles();
+                    current_instruction = Some(instruction);
+                }
+                None => break,
+            };
+        }
+
+        let crt_cycle = current_cycle % 40;
+        if crt_cycle == register - 1 || crt_cycle == register || crt_cycle == register + 1 {
+            crt_row.push('#');
+        } else {
+            crt_row.push('.');
+        }
+
+        cycle_remaining -= 1;
+        current_cycle += 1;
+    }
+
+    crt_row
+        .chunks(40)
+        .map(|row| row.iter().collect::<String>())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 enum Instruction {
@@ -89,7 +137,6 @@ mod tests {
 
     #[test]
     fn solve_b_success() {
-        todo!()
-        // assert_eq!(solve_b(INPUT), 36);
+        assert_eq!(solve_b(INPUT), include_str!("../example.solution.txt"));
     }
 }
