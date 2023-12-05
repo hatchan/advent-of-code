@@ -9,7 +9,11 @@ fn solve_a(input: &str) -> usize {
 
     part_numbers
         .into_iter()
-        .filter(|p| p.is_next_to(&parts))
+        .filter(|p| {
+            parts
+                .iter()
+                .any(|(row, column, _)| p.is_next_to(*row, *column))
+        })
         .map(|p| p.value)
         .sum()
 }
@@ -83,27 +87,51 @@ struct PartNumber {
 }
 
 impl PartNumber {
-    /// return true if the part number is next to _any_ of the parts
-    fn is_next_to(&self, parts: &[(isize, isize, char)]) -> bool {
-        let result = parts.into_iter().any(|(row, column, _)| {
-            let within_row = self.row - 1 <= *row && self.row + 1 >= *row;
-            let within_column = self.column - 1 <= *column && self.until + 1 >= *column;
-
-            within_row && within_column
-        });
-
-        println!(
-            "value: {}, row: {}, column: {}-{} result: {}",
-            self.value, self.row, self.column, self.until, result,
-        );
-        println!("result: {}", result);
-
-        result
+    fn is_next_to(&self, row: isize, column: isize) -> bool {
+        (self.row - 1 <= row && self.row + 1 >= row)
+            && (self.column - 1 <= column && self.until + 1 >= column)
     }
 }
 
 fn solve_b(input: &str) -> usize {
-    todo!("solve_b")
+    let (part_numbers, parts) = parse_input(input);
+
+    parts
+        .into_iter()
+        .filter_map(|(row, column, c)| {
+            if c != '*' {
+                return None;
+            }
+
+            let multiply_adjacent_part_numbers =
+                multiply_adjacent_part_numbers(row, column, &part_numbers);
+
+            Some(multiply_adjacent_part_numbers)
+        })
+        .sum()
+}
+
+fn multiply_adjacent_part_numbers(
+    row: isize,
+    column: isize,
+    part_numbers: &Vec<PartNumber>,
+) -> usize {
+    let results: Vec<_> = part_numbers
+        .iter()
+        .filter_map(|p| {
+            if p.is_next_to(row, column) {
+                Some(p.value)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    match results.len() {
+        0 | 1 => 0,
+        2 => results[0] * results[1],
+        _ => panic!("expected only max two part numbers"),
+    }
 }
 
 #[cfg(test)]
