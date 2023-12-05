@@ -111,11 +111,7 @@ fn solve_b(input: &str) -> usize {
         .sum()
 }
 
-fn multiply_adjacent_part_numbers(
-    row: isize,
-    column: isize,
-    part_numbers: &Vec<PartNumber>,
-) -> usize {
+fn multiply_adjacent_part_numbers(row: isize, column: isize, part_numbers: &[PartNumber]) -> usize {
     let results: Vec<_> = part_numbers
         .iter()
         .filter_map(|p| {
