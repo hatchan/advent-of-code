@@ -5,7 +5,24 @@ fn main() {
 }
 
 fn solve_a(input: &str) -> usize {
-    todo!("solve_a")
+    input.lines().map(calc_winnings).sum()
+}
+
+fn calc_winnings(input: &str) -> usize {
+    let (_card, content) = input.split_once(": ").expect("invalid format");
+    let (winnings, numbers) = content.split_once(" | ").expect("invalid format");
+    let winnings: Vec<_> = winnings.split(' ').filter(|w| !w.is_empty()).collect();
+
+    let wins = numbers
+        .split(' ')
+        .filter(|n| !n.is_empty() && winnings.contains(n))
+        .count();
+
+    if wins == 0 {
+        return 0;
+    } else {
+        2_usize.pow((wins - 1) as u32)
+    }
 }
 
 fn solve_b(input: &str) -> usize {
