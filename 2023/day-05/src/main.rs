@@ -1,14 +1,33 @@
+use std::str::Lines;
+
 fn main() {
     let input = include_str!("../input.txt");
     println!("Day 05 A: {}", solve_a(input));
-    // println!("Day 05 B: {}", solve_b(input));
+    println!("Day 05 B: {}", solve_b(input));
 }
 
 fn solve_a(input: &str) -> usize {
     let mut lines = input.lines();
 
     // First line should the the seed inputs, so just parse that differently
-    let seeds: Vec<usize> = lines
+    let seeds = parse_seeds_a(&mut lines);
+    let maps = parse_maps(&mut lines);
+
+    seeds
+        .into_iter()
+        .map(|seed| {
+            let mut current = seed;
+            for map in &maps {
+                current = map.translate(current);
+            }
+            current
+        })
+        .min()
+        .expect("a number is expected")
+}
+
+fn parse_seeds_a(lines: &mut Lines) -> Vec<usize> {
+    lines
         .next()
         .expect("no seeds found")
         .split_once(": ")
@@ -18,15 +37,62 @@ fn solve_a(input: &str) -> usize {
                 .map(|c| c.parse().expect("expecting a number"))
                 .collect()
         })
-        .expect("invalid format");
+        .expect("invalid format")
+}
 
-    let mut maps: Vec<Map> = vec![];
+fn solve_b(input: &str) -> usize {
+    let mut lines = input.lines();
 
+    // First line should the the seed inputs, so just parse that differently
+    let seeds = parse_seeds_b(&mut lines);
+    let maps = parse_maps(&mut lines);
+
+    seeds
+        .into_iter()
+        .map(|(start, range)| {
+            let mut current = create_vec(start, range);
+            for map in &maps {
+                map.translate_range(&mut current);
+            }
+            current
+        })
+        .flatten()
+        .min()
+        .expect("a number is expected")
+}
+
+fn create_vec(start: usize, range: usize) -> Vec<usize> {
+    let mut result = Vec::with_capacity(range);
+
+    for i in start..(start + range) {
+        result.push(i);
+    }
+
+    result
+}
+
+fn parse_seeds_b(lines: &mut Lines) -> Vec<(usize, usize)> {
+    lines
+        .next()
+        .expect("no seeds found")
+        .split_once(": ")
+        .map(|(_, seeds)| {
+            let seeds: Vec<_> = seeds
+                .split(' ')
+                .map(|c| c.parse().expect("expecting a number"))
+                .collect();
+            seeds.chunks(2).map(|c| (c[0], c[1])).collect()
+        })
+        .expect("invalid format")
+}
+
+fn parse_maps(lines: &mut Lines) -> Vec<Map> {
+    let mut buf = vec![];
     // Now we will parse all the mappings
     for line in lines {
         if line.ends_with(':') {
             // this the header, add a new section
-            maps.push(Map::new());
+            buf.push(Map::new());
             continue;
         }
 
@@ -46,22 +112,12 @@ fn solve_a(input: &str) -> usize {
             )
         };
 
-        maps.last_mut()
+        buf.last_mut()
             .expect("should always have a last section")
             .add_mapping(mapping);
     }
 
-    seeds
-        .into_iter()
-        .map(|seed| {
-            let mut current = seed;
-            for map in &maps {
-                current = map.translate(current);
-            }
-            current
-        })
-        .min()
-        .expect("a number is expected")
+    buf
 }
 
 struct Map {
@@ -73,6 +129,10 @@ impl Map {
         Self { mappings: vec![] }
     }
 
+    fn add_mapping(&mut self, mapping: Mappings) {
+        self.mappings.push(mapping);
+    }
+
     fn translate(&self, input: usize) -> usize {
         self.mappings
             .iter()
@@ -80,33 +140,35 @@ impl Map {
             .unwrap_or(input)
     }
 
-    fn add_mapping(&mut self, mapping: Mappings) {
-        self.mappings.push(mapping);
+    fn translate_range(&self, input: &mut Vec<usize>) {
+        input.iter_mut().for_each(|i| {
+            *i = self.translate(*i);
+        });
     }
 }
 
 struct Mappings {
     destination_start: usize,
-    // destination_end: usize,
+
     source_start: usize,
     source_end: usize,
-    // range_length: usize,
+
+    range_length: usize,
 }
 
 impl Mappings {
     fn new(destination_start: usize, source_start: usize, range_length: usize) -> Self {
         Self {
             destination_start,
-            // destination_end: destination_start + range_length,
             source_start,
             source_end: source_start + range_length,
-            // range_length,
+            range_length,
         }
     }
 
     /// Converts input, if there is a mapping possible, otherwise return None.
     fn translate(&self, input: usize) -> Option<usize> {
-        if input >= self.source_start && input <= self.source_end {
+        if self.is_contained(input) {
             let offset = input - self.source_start;
             let result = self.destination_start + offset;
             Some(result)
@@ -115,11 +177,23 @@ impl Mappings {
             None
         }
     }
-}
 
-// fn solve_b(input: &str) -> usize {
-//     todo!("solve_b")
-// }
+    /// Converts input, if there is a mapping possible, otherwise return None.
+    fn translate_range(&self, input: usize) -> Option<usize> {
+        if self.is_contained(input) {
+            let offset = input - self.source_start;
+            let result = self.destination_start + offset;
+            Some(result)
+        } else {
+            // it is not contained
+            None
+        }
+    }
+
+    fn is_contained(&self, input: usize) -> bool {
+        input >= self.source_start && input <= self.source_end
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -132,8 +206,8 @@ mod tests {
         assert_eq!(solve_a(INPUT), 35);
     }
 
-    // #[test]
-    // fn solve_b_success() {
-    //     assert_eq!(solve_b(INPUT), 30);
-    // }
+    #[test]
+    fn solve_b_success() {
+        assert_eq!(solve_b(INPUT), 46);
+    }
 }
